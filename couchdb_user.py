@@ -14,9 +14,16 @@ except ImportError:
 
 
 class CouchDBError(Exception):
-    def __init__(self, status, response):
+    def __init__(self, status, response, message=None):
         self.status_code = status
         self.response = response
+        self.message = message
+
+
+class AuthenticationException(Exception):
+    def __init__(self, user, message):
+        self.user = user
+        self.message = message
 
 
 class CouchDB:
@@ -85,6 +92,88 @@ class CouchDB:
         else:
             raise CouchDBError(r.status_code, r.json())
 
+    def get_absolute_url(self, path):
+        return "http://{0}:{1}{2}".format(self.host, self.port, path)
+
+    def get_user_url(self, username):
+        return self.get_absolute_url("/_users/org.couchdb.user:{2}".format(self.host, self.port, username))
+
+    def get_document(self, database, document_id, authenticated=False):
+        url = "http://{0}:{1}/{2}/{3}".format(self.host, self.port, database, document_id)
+        r = requests.get(url=url,
+                         headers={'Accept': 'application/json'},
+                         auth=self.get_auth(authenticated))
+        if r.status_code == requests.codes.ok or r.status_code == requests.codes.not_modified:
+            return r.json()
+        elif r.status_code == requests.codes.not_found:
+            return None
+        elif r.status_code == requests.codes.unauthorized and not authenticated:
+            return self.get_document(database, document_id, authenticated=True)
+        else:
+            raise CouchDBError(r.status_code, r.json())
+
+    def create_session(self, username, password):
+        url = self.get_absolute_url("/_session")
+        data = "name={0}&password={1}".format(username, password)
+        headers = {
+            "Accept": "application/json",
+            "Content-Length": len(data),
+            "Content-Type": "application/x-www-form-urlencoded"
+        }
+        r = requests.post(url=url, headers=headers, data=data)
+        if r.status_code == requests.codes.ok:
+            token = r.headers['set-cookie']
+            return token
+        elif r.status_code == requests.codes.unauthorized:
+            reason = r.json()["reason"]
+            raise AuthenticationException(user=username, message=reason)
+        else:
+            raise CouchDBError(r.status_code, r.json())
+
+    def close_session(self, session_token):
+        url = self.get_absolute_url("/_session")
+        headers = {"Accept": "application/json"}
+        cookies = {"AuthSession": session_token}
+        requests.post(url=url, headers=headers, cookies=cookies)
+
+    def create_user(self, username, password, roles=None, authenticated=False):
+        if not roles:
+            roles = []
+
+        try:
+            session_token = self.create_session(username, password)
+            self.close_session(session_token)
+            return False
+        except AuthenticationException:
+            pass
+
+        document = self.get_document("_users", "org.couchdb.user:{0}".format(username), authenticated)
+        if not document:
+            document = {}
+        document["name"] = username
+        document["password"] = password
+        document["roles"] = roles
+        document["type"] = "user"
+
+        headers = {'Accept': 'application/json', 'X-Couch-Full-Commit': 'true'}
+
+        r = requests.put(url=self.get_user_url(username),
+                         json=document,
+                         headers=headers,
+                         auth=self.get_auth(authenticated))
+
+        if r.status_code in [requests.codes.created, requests.codes.accepted]:
+            return True
+        elif r.status_code == requests.codes.unauthorized and not authenticated:
+            return self.create_user(username, password, roles, authenticated=True)
+        else:
+            # r.status_code in [
+            #   requests.codes.bad_request,
+            #   requests.codes.not_found,
+            #   requests.codes.conflict
+            # ]
+            raise CouchDBError(r.status_code, r.json())
+
 
 def main():
     module = AnsibleModule(
@@ -134,7 +223,14 @@ def main():
             except CouchDBError as e:
                 module.fail_json(msg=e.response["reason"], status_code=e.status_code, response=e.response)
     else:
-        module.fail_json(msg="Support for regular users is work in progress...")
+        if state == "present":
+            try:
+                changed = couchdb.create_user(username, password, roles=[], authenticated=True)
+                module.exit_json(changed=changed)
+            except CouchDBError as e:
+                module.fail_json(msg=e.response["reason"], status_code=e.status_code, response=e.response)
+        elif state == "absent":
+            module.fail_json(msg="Support for regular users is work in progress...")
 
 
 from ansible.module_utils.basic import *
