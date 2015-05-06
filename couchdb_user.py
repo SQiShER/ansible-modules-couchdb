@@ -27,7 +27,7 @@ class AuthenticationException(Exception):
         self.message = message
 
 
-class CouchDB:
+class CouchDBClient:
     def __init__(self, host="localhost", port="5984", auth_user=None, auth_password=None):
         self.host = host
         self.port = port
@@ -36,23 +36,8 @@ class CouchDB:
         else:
             self.auth = None
 
-    def get_absolute_url(self, path):
-        return "http://{0}:{1}{2}".format(self.host, self.port, path)
-
-    @staticmethod
-    def create_exception(r):
-        status_code = r.status_code
-        if r.headers['content-type'] == 'application/json':
-            response_body = r.json()
-            error_type = response_body['error']
-            reason = response_body['reason']
-            return CouchDBException(status_code, reason=reason, error_type=error_type)
-        else:
-            response_body = r.text
-            return CouchDBException(status_code, reason=response_body)
-
     def create_session(self, username, password):
-        url = self.get_absolute_url("/_session")
+        url = self._get_absolute_url("/_session")
         data = "name={0}&password={1}".format(username, password)
         headers = {
             "Accept": "application/json",
@@ -67,31 +52,13 @@ class CouchDB:
             reason = r.json()["reason"]
             raise AuthenticationException(user=username, message=reason)
         else:
-            raise self.create_exception(r)
+            raise self._create_exception(r)
 
     def close_session(self, session_token):
-        url = self.get_absolute_url("/_session")
+        url = self._get_absolute_url("/_session")
         headers = {"Accept": "application/json"}
         cookies = {"AuthSession": session_token}
         requests.post(url, headers=headers, cookies=cookies)
-
-    def get_auth(self, authenticated):
-        return self.auth if authenticated is True else None
-
-    def get_password_hash_of_admin_user(self, username, authenticated=False):
-        url = self.get_absolute_url("/_config/admins/{0}".format(username))
-        headers = {"Accept": "application/json"}
-        auth = self.get_auth(authenticated)
-        r = requests.get(url, headers=headers, auth=auth)
-        if r.status_code == requests.codes.ok:
-            password_hash = r.json()
-            return password_hash
-        elif r.status_code == requests.codes.unauthorized and not authenticated:
-            return self.get_password_hash_of_admin_user(username, authenticated=True)
-        elif r.status_code == requests.codes.not_found:
-            return None
-        else:
-            raise self.create_exception(r)
 
     def create_or_update_admin_user(self, username, password, raw_password=False, authenticated=False):
         try:
@@ -100,75 +67,32 @@ class CouchDB:
             return False
         except AuthenticationException:
             pass
-
-        if raw_password and self.get_password_hash_of_admin_user(username, authenticated) == password:
+        if raw_password and self._get_password_hash_of_admin_user(username, authenticated) == password:
             return False
-
-        url = self.get_absolute_url("/_config/admins/{0}".format(username))
+        url = self._get_absolute_url("/_config/admins/{0}".format(username))
         data = '"{0}"'.format(password)
         headers = {"Accept": "application/json"}
         params = {"raw": "true"} if raw_password else {}
-        auth = self.get_auth(authenticated)
+        auth = self._get_auth(authenticated)
         r = requests.put(url, data=data, headers=headers, params=params, auth=auth)
         if r.status_code == requests.codes.ok:
             return True
         elif r.status_code == requests.codes.unauthorized and not authenticated:
             return self.create_or_update_admin_user(username, password, raw_password, authenticated=True)
         else:
-            raise self.create_exception(r)
+            raise self._create_exception(r)
 
-    def remove_admin_user(self, username, authenticated=False):
-        url = self.get_absolute_url("/_config/admins/{0}".format(username))
+    def remove_admin_user(self, username):
+        url = self._get_absolute_url("/_config/admins/{0}".format(username))
         headers = {"Accept": "application/json"}
-        auth = self.get_auth(authenticated)
+        auth = self._get_auth(True)
         r = requests.delete(url, headers=headers, auth=auth)
         if r.status_code == requests.codes.ok:
             return True
         elif r.status_code == requests.codes.not_found:
             return False
-        elif r.status_code == requests.codes.unauthorized and not authenticated:
-            return self.remove_admin_user(username, authenticated=True)
         else:
-            raise self.create_exception(r)
-
-    def get_document(self, database, document_id, authenticated=False):
-        url = self.get_absolute_url("/{0}/{1}").format(database, document_id)
-        headers = {"Accept": "application/json"}
-        auth = self.get_auth(authenticated)
-        r = requests.get(url, headers=headers, auth=auth)
-        if r.status_code == requests.codes.ok or r.status_code == requests.codes.not_modified:
-            return r.json()
-        elif r.status_code == requests.codes.not_found:
-            return None
-        elif r.status_code == requests.codes.unauthorized and not authenticated:
-            return self.get_document(database, document_id, authenticated=True)
-        else:
-            raise self.create_exception(r)
-
-    def remove_user(self, username, authenticated=False):
-        url = self.get_user_url(username)
-        headers = {"Accept": "application/json"}
-        auth = self.get_auth(authenticated)
-        r = requests.delete(url, headers=headers, auth=auth)
-        if r.status_code in [requests.codes.ok, requests.codes.accepted]:
-            return True
-        elif r.status_code == requests.codes.not_found:
-            return False
-        elif r.status_code == requests.codes.unauthorized and not authenticated:
-            return self.remove_user(username, authenticated=True)
-        else:
-            raise self.create_exception(r)
-
-    def get_user_url(self, username):
-        return self.get_absolute_url("/_users/org.couchdb.user:{2}".format(self.host, self.port, username))
-
-    def _can_authenticate(self, username, password):
-        try:
-            session_token = self.create_session(username, password)
-            self.close_session(session_token)
-            return True
-        except AuthenticationException:
-            return False
+            raise self._create_exception(r)
 
     def create_or_update_user(self, username, password, roles=None, authenticated=False):
         if not roles:
@@ -197,16 +121,88 @@ class CouchDB:
             "Accept": "application/json",
             "X-Couch-Full-Commit": "true"
         }
-        r = requests.put(url=self.get_user_url(username),
+        r = requests.put(url=self._get_user_url(username),
                          json=document,
                          headers=headers,
-                         auth=self.get_auth(authenticated))
+                         auth=self._get_auth(authenticated))
         if r.status_code in [requests.codes.created, requests.codes.accepted]:
             return True
         elif r.status_code == requests.codes.unauthorized and not authenticated:
             return self.create_or_update_user(username, password, roles, authenticated=True)
         else:
-            raise self.create_exception(r)
+            raise self._create_exception(r)
+
+    def remove_user(self, username, authenticated=False):
+        url = self._get_user_url(username)
+        headers = {"Accept": "application/json"}
+        auth = self._get_auth(authenticated)
+        r = requests.delete(url, headers=headers, auth=auth)
+        if r.status_code in [requests.codes.ok, requests.codes.accepted]:
+            return True
+        elif r.status_code == requests.codes.not_found:
+            return False
+        elif r.status_code == requests.codes.unauthorized and not authenticated:
+            return self.remove_user(username, authenticated=True)
+        else:
+            raise self._create_exception(r)
+
+    def get_document(self, database, document_id, authenticated=False):
+        url = self._get_absolute_url("/{0}/{1}").format(database, document_id)
+        headers = {"Accept": "application/json"}
+        auth = self._get_auth(authenticated)
+        r = requests.get(url, headers=headers, auth=auth)
+        if r.status_code == requests.codes.ok or r.status_code == requests.codes.not_modified:
+            return r.json()
+        elif r.status_code == requests.codes.not_found:
+            return None
+        elif r.status_code == requests.codes.unauthorized and not authenticated:
+            return self.get_document(database, document_id, authenticated=True)
+        else:
+            raise self._create_exception(r)
+
+    def _get_auth(self, authenticated):
+        return self.auth if authenticated is True else None
+
+    def _get_absolute_url(self, path):
+        return "http://{0}:{1}{2}".format(self.host, self.port, path)
+
+    def _get_user_url(self, username):
+        return self._get_absolute_url("/_users/org.couchdb.user:{2}".format(self.host, self.port, username))
+
+    def _get_password_hash_of_admin_user(self, username, authenticated=False):
+        url = self._get_absolute_url("/_config/admins/{0}".format(username))
+        headers = {"Accept": "application/json"}
+        auth = self._get_auth(authenticated)
+        r = requests.get(url, headers=headers, auth=auth)
+        if r.status_code == requests.codes.ok:
+            password_hash = r.json()
+            return password_hash
+        elif r.status_code == requests.codes.unauthorized and not authenticated:
+            return self._get_password_hash_of_admin_user(username, authenticated=True)
+        elif r.status_code == requests.codes.not_found:
+            return None
+        else:
+            raise self._create_exception(r)
+
+    def _can_authenticate(self, username, password):
+        try:
+            session_token = self.create_session(username, password)
+            self.close_session(session_token)
+            return True
+        except AuthenticationException:
+            return False
+
+    @staticmethod
+    def _create_exception(r):
+        status_code = r.status_code
+        if r.headers['content-type'] == 'application/json':
+            response_body = r.json()
+            error_type = response_body['error']
+            reason = response_body['reason']
+            return CouchDBException(status_code, reason=reason, error_type=error_type)
+        else:
+            response_body = r.text
+            return CouchDBException(status_code, reason=response_body)
 
 
 def main():
@@ -238,24 +234,25 @@ def main():
     admin = module.params['admin']
     roles = module.params['roles']
     state = module.params['state']
-    force_basic_auth = module.params['force_basic_auth']
+    authenticated = module.params['force_basic_auth']
     auth_user = module.params['auth_user']
     auth_password = module.params['auth_password']
 
-    couchdb = CouchDB(host, port, auth_user, auth_password)
+    couchdb = CouchDBClient(host, port, auth_user, auth_password)
 
     try:
         changed = False
         if admin is True:
             if state == "present":
-                changed = couchdb.create_or_update_admin_user(username, password, raw_password, force_basic_auth)
+                changed = couchdb.create_or_update_admin_user(username, password, raw_password,
+                                                              authenticated=authenticated)
             elif state == "absent":
                 changed = couchdb.remove_admin_user(username)
         else:
             if state == "present":
-                changed = couchdb.create_or_update_user(username, password, roles=roles, authenticated=True)
+                changed = couchdb.create_or_update_user(username, password, roles=roles, authenticated=authenticated)
             elif state == "absent":
-                changed = couchdb.remove_user(username, authenticated=True)
+                changed = couchdb.remove_user(username, authenticated=authenticated)
         module.exit_json(changed=changed)
     except CouchDBException as e:
         module.fail_json(msg=e.reason, status_code=e.status_code, error=e.error_type)
