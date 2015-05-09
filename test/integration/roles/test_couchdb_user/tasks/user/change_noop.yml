@@ -1,0 +1,19 @@
+---
+- name: user -> change_noop | setup | create user
+  couchdb_user: >
+    name={{ user_name }}
+    password={{ user_password }}
+    state=present
+  register: result
+
+- name: user -> change_noop | test | create user again
+  couchdb_user: >
+    name={{ user_name }}
+    password={{ user_password }}
+    state=present
+  register: result
+
+- name: user -> change_noop | test | assert no change reported
+  assert: { that: "result.changed == false" }
+
+- include: ../__cleanup_user.yml

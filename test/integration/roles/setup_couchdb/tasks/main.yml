@@ -1,0 +1,8 @@
+---
+- apt_repository: repo="ppa:couchdb/stable" update_cache=yes
+- apt: name=couchdb state=latest
+- ini_file: dest=/etc/couchdb/local.ini section=httpd option=bind_address value=0.0.0.0
+- ini_file: dest=/etc/couchdb/local.ini section=couchdb option=delayed_commits value=false
+- ini_file: dest=/etc/couchdb/local.ini section=admins state=absent
+- service: name=couchdb state=restarted enabled=yes
+- wait_for: port=5984

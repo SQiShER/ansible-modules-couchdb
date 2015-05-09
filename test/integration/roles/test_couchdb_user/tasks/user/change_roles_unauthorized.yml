@@ -1,0 +1,26 @@
+---
+- name: user -> change_roles_unauthorized | setup | create user
+  couchdb_user: >
+    name={{ user_name }}
+    password={{ user_password }}
+    state=present
+
+- name: user -> change_roles_unauthorized | test | attempt to change own roles
+  couchdb_user: >
+    name={{ user_name }}
+    password={{ user_password }}
+    roles=foo,bar
+    state=present
+    login_user={{ user_name }}
+    login_password={{ user_password }}
+  register: result
+  ignore_errors: yes
+
+- name: user -> change_roles_unauthorized | verify | assert change attempt failed properly
+  assert:
+    that:
+      - "result.failed == true"
+      - "result.error == 'forbidden'"
+      - "result.msg == 'Only _admin may edit roles'"
+
+- include: ../__cleanup_user.yml

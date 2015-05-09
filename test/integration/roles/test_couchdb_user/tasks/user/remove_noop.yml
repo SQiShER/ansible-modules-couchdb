@@ -1,0 +1,11 @@
+---
+- name: user -> remove_noop | test | remove non-existing user (with non-existing credentials)
+  couchdb_user: >
+    name={{ user_name }}
+    state=absent
+    login_user={{ user_name }}
+    login_password={{ user_password }}
+  register: result
+
+- name: user -> remove_noop | verify | module reports no change
+  assert: { that: "result.changed == false" }

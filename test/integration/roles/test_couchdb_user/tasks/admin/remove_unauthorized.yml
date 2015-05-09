@@ -1,0 +1,15 @@
+---
+- include: ../__setup_admin.yml
+
+- name: admin -> remove_unauthorized | test | remove admin without authentication
+  couchdb_user: name={{ admin_name }} admin=yes state=absent
+  register: result
+  ignore_errors: yes
+
+- name: admin -> remove_unauthorized | test | assert proper error response
+  assert:
+    that:
+      - "result.failed == true"
+      - "result.msg == 'You need to be admin in order to remove admin users.'"
+
+- include: ../__cleanup_admin.yml

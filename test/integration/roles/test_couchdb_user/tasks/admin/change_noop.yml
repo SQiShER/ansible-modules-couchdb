@@ -1,0 +1,15 @@
+---
+- include: ../__setup_admin.yml
+
+- name: admin -> change_noop | test | create the same admin again
+  couchdb_user: >
+    name={{ admin_name }}
+    password={{ admin_password }}
+    admin=yes
+    state=present
+  register: result
+
+- name: admin -> change_noop | test | assert no change is reported
+  assert: { that: "result.changed == false" }
+
+- include: ../__cleanup_admin.yml

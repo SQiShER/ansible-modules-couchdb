@@ -1,0 +1,10 @@
+---
+user_name: lester
+user_password: nygaard
+user_password_2: fargo
+user_raw_password: "-pbkdf2-4a1bc30e4f3a7c03ad703ca0fdc60b37580a2542,3600790547b8af251f385410cd702f0e,10"
+
+admin_name: draper
+admin_password: jameson
+admin_password_2: red_label
+admin_raw_password: "-pbkdf2-4a1bc30e4f3a7c03ad703ca0fdc60b37580a2542,3600790547b8af251f385410cd702f0e,10"

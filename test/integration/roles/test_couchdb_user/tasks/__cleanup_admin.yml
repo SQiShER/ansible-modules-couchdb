@@ -1,0 +1,8 @@
+---
+- name: cleanup | remove admin
+  couchdb_user: >
+    name={{ admin_name }}
+    admin=yes
+    state=absent
+    login_user={{ admin_name }}
+    login_password={{ admin_password }}

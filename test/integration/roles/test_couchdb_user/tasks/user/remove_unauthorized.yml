@@ -1,0 +1,28 @@
+---
+# crash the admin party, so users can only be deleted by authorized users
+- include: ../__setup_admin.yml
+
+- name: user -> remove_unauthorized | setup | create user
+  couchdb_user: name={{ user_name }} password={{ user_password }} state=present
+
+- name: user -> remove_unauthorized | test | remove user without authentication
+  couchdb_user: name={{ user_name }} state=absent
+  register: result
+  ignore_errors: yes
+
+- name: user -> remove_unauthorized | test | module reports no change
+  assert:
+    that:
+      - "result.failed == true"
+      - "result.msg == 'You need to be authenticated in order to remove users when you have admin users.'"
+
+- name: user -> remove_unauthorized | test | remove user with invalid authentication
+  couchdb_user: name={{ user_name }} state=absent login_user=any login_password=invalid
+  register: result
+  ignore_errors: yes
+
+- name: user -> remove_unauthorized | test | module reports no change
+  assert: { that: "result.changed == false" }
+
+- include: ../__cleanup_admin.yml
+- include: ../__cleanup_user.yml

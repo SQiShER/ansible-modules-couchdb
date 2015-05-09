@@ -1,0 +1,7 @@
+---
+- name: admin -> remove_noop | test | remove unknown admin
+  couchdb_user: name=unknown admin=yes state=absent login_user=unknown login_password=unknown
+  register: result
+
+- name: admin -> remove_noop | test | assert module reports no change
+  assert: { that: "result.changed == false" }

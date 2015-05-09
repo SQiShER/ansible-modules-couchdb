@@ -1,0 +1,18 @@
+---
+- name: admin -> create | test | create admin
+  couchdb_user: name={{ admin_name }} password={{ admin_password }} admin=yes state=present
+  register: result
+
+- name: admin -> create | test | assert module reports change
+  assert: { that: "result.changed == true" }
+
+- name: admin -> create | test | fetch password hash of the newly created admin
+  uri:
+    url: http://localhost:5984/_config/admins/{{ admin_name }}
+    return_content: yes
+    user: "{{ admin_name }}"
+    password: "{{ admin_password }}"
+    force_basic_auth: yes
+  register: result
+
+- include: ../__cleanup_admin.yml

@@ -1,0 +1,37 @@
+---
+- include: ../__setup_admin.yml
+
+- name: user -> change_roles | setup | create user
+  couchdb_user: >
+    name={{ user_name }}
+    password={{ user_password }}
+    state=present
+
+- name: user -> change_roles | test | change user roles
+  couchdb_user: >
+    name={{ user_name }}
+    password={{ user_password }}
+    roles=foo,bar
+    state=present
+    login_user={{ admin_name }}
+    login_password={{ admin_password }}
+  register: result
+
+- name: user -> change_roles | verify | assert module reports change
+  assert: { that: "result.changed == true" }
+
+- name: user -> change_roles | verify | fetch user document
+  uri:
+    url: http://localhost:5984/_users/org.couchdb.user:{{ user_name }}
+    return_content: yes
+    user: "{{ user_name }}"
+    password: "{{ user_password }}"
+    force_basic_auth: yes
+    HEADER_Accept: application/json
+  register: result
+
+- name: user -> change_roles | verify | assert that user document for {{ user_name }} exists
+  assert: { that: "result.json.roles == ['foo', 'bar']" }
+
+- include: ../__cleanup_admin.yml
+- include: ../__cleanup_user.yml

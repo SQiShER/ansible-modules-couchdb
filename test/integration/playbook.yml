@@ -1,0 +1,12 @@
+---
+- name: prepare environment
+  hosts: all
+  tasks:
+    - apt: update_cache=yes cache_valid_time=86400
+    - apt: name=language-pack-en state=latest
+    - locale_gen: name=en_US.UTF-8
+
+- name: perform tests
+  hosts: all
+  roles:
+    - test_couchdb_user

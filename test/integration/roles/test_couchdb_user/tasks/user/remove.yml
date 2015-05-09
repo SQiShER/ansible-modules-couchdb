@@ -1,0 +1,24 @@
+---
+- name: user -> remove | setup | create user
+  couchdb_user: >
+    name={{ user_name }}
+    password={{ user_password }}
+    state=present
+
+- name: user -> remove | test | remove user
+  couchdb_user: >
+    name={{ user_name }}
+    state=absent
+    login_user={{ user_name }}
+    login_password={{ user_password }}
+  register: result
+
+- name: user -> remove | verify | module reports change
+  assert: { that: "result.changed == true" }
+
+- name: user -> remove | verify | user document is gone
+  uri:
+    url: http://localhost:5984/_users/org.couchdb.user:{{ user_name }}
+    return_content: yes
+    HEADER_Accept: application/json
+    status_code: 404
