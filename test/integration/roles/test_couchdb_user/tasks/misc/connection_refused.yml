@@ -1,0 +1,18 @@
+---
+- name: misc -> connection_refused | test | attempt to connect to non-existing server
+  couchdb_user: >
+    host=127.0.0.1
+    port=33333
+    name={{ admin_name }}
+    password={{ admin_password }}
+    admin=yes
+    state=present
+  register: result
+  ignore_errors: yes
+
+- name: misc -> connection_refused | test | assert result contains proper msg and data
+  assert:
+    that:
+      - "result.msg == 'Failed to connect to CouchDB at 127.0.0.1:33333'"
+      - "result.host == '127.0.0.1'"
+      - "result.port == 33333"

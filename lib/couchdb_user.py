@@ -102,6 +102,7 @@ HAS_REQUESTS = True
 try:
     import requests
     from requests.auth import AuthBase
+    from requests.exceptions import ConnectionError
 except ImportError:
     HAS_REQUESTS = False
 
@@ -396,14 +397,13 @@ def main():
     login_password = module.params['login_password']
 
     couchdb = CouchDBClient(host, port, login_user, login_password, authentication_db)
-
-    if state == "absent" and not login_user:
-        if admin:
-            module.fail_json(msg="You need to be admin in order to remove admin users.")
-        elif not couchdb.is_admin_party():
-            module.fail_json(msg="You need to be authenticated in order to remove users when you have admin users.")
-
     try:
+        if state == "absent" and not login_user:
+            if admin:
+                module.fail_json(msg="You need to be admin in order to remove admin users.")
+            elif not couchdb.is_admin_party():
+                module.fail_json(msg="You need to be authenticated in order to remove users when you have admin users.")
+
         couchdb.login()
         changed = False
         kwargs = {}
@@ -429,6 +429,13 @@ def main():
             "status_code": e.status_code,
             "error": e.error_type,
             "origin": e.origin
+        }
+        module.fail_json(**kwargs)
+    except ConnectionError:
+        kwargs = {
+            "msg": "Failed to connect to CouchDB at {0}:{1}".format(host, port),
+            "host": host,
+            "port": port
         }
         module.fail_json(**kwargs)
     finally:

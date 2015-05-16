@@ -24,3 +24,8 @@
 - include: user/remove.yml
 - include: user/remove_noop.yml
 - include: user/remove_unauthorized.yml
+
+# ===============================================
+# Test miscellaneous stuff
+#
+- include: misc/connection_refused.yml
