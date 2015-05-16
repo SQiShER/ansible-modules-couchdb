@@ -1,11 +1,6 @@
 ---
 - include: ../__setup_admin.yml
-
-- name: user -> change_roles | setup | create user
-  couchdb_user: >
-    name={{ user_name }}
-    password={{ user_password }}
-    state=present
+- include: ../__setup_user.yml
 
 - name: user -> change_roles | test | change user roles
   couchdb_user: >

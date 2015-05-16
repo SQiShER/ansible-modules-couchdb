@@ -16,10 +16,11 @@
 #
 - include: user/create.yml
 - include: user/change_password.yml
+- include: user/change_password_raw.yml
 - include: user/change_password_unauthorized.yml
 - include: user/change_roles.yml
 - include: user/change_roles_unauthorized.yml
 - include: user/change_noop.yml
 - include: user/remove.yml
-- include: user/remove_unauthorized.yml
 - include: user/remove_noop.yml
+- include: user/remove_unauthorized.yml

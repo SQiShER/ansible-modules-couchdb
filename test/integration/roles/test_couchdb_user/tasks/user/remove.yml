@@ -1,9 +1,5 @@
 ---
-- name: user -> remove | setup | create user
-  couchdb_user: >
-    name={{ user_name }}
-    password={{ user_password }}
-    state=present
+- include: ../__setup_user.yml
 
 - name: user -> remove | test | remove user
   couchdb_user: >

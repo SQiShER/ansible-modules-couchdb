@@ -215,21 +215,43 @@ class CouchDBClient:
         else:
             raise self._create_exception(r)
 
-    def create_or_update_user(self, username, password, roles=None):
+    def create_or_update_user(self, username, password, raw_password=False, roles=None):
         if not roles:
             roles = []
-        password_requires_update = not self._can_authenticate(username, password)
-        document = self.get_document(self.authentication_db, "org.couchdb.user:{0}".format(username))
 
         has_changes = False
+        document = self.get_document(self.authentication_db, "org.couchdb.user:{0}".format(username))
         if not document:
             document = {}
             has_changes = True
+
+        if raw_password:
+            password_scheme_and_derived_key, salt, iterations = password.split(",", 3)
+            password_scheme, derived_key = password_scheme_and_derived_key[1:].split("-")
+            original_data = [
+                document.get("password_scheme"),
+                document.get("derived_key"),
+                document.get("salt"),
+                int(document.get("iterations"))
+            ]
+            desired_data = [password_scheme, derived_key, salt, int(iterations)]
+            if original_data != desired_data:
+                document["password_scheme"] = password_scheme
+                document["derived_key"] = derived_key
+                document["salt"] = salt
+                document["iterations"] = int(iterations)
+                document.pop("password", None)
+                has_changes = True
+        elif not self._can_authenticate(username, password):
+            document["password"] = password
+            document.pop("password_scheme", None)
+            document.pop("derived_key", None)
+            document.pop("salt", None)
+            document.pop("iterations", None)
+            has_changes = True
+
         if document.get("name") != username:
             document["name"] = username
-            has_changes = True
-        if password_requires_update:
-            document["password"] = password
             has_changes = True
         if document.get("roles") != roles:
             document["roles"] = roles
@@ -392,7 +414,7 @@ def main():
                 changed = couchdb.remove_admin_user(username)
         else:
             if state == "present":
-                changed = couchdb.create_or_update_user(username, password, roles=roles)
+                changed = couchdb.create_or_update_user(username, password, raw_password=raw_password, roles=roles)
             elif state == "absent":
                 changed = couchdb.remove_user(username)
                 kwargs = {

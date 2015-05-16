@@ -1,9 +1,5 @@
 ---
-- name: user -> change_roles_unauthorized | setup | create user
-  couchdb_user: >
-    name={{ user_name }}
-    password={{ user_password }}
-    state=present
+- include: ../__setup_user.yml
 
 - name: user -> change_roles_unauthorized | test | attempt to change own roles
   couchdb_user: >
