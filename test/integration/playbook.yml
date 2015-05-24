@@ -1,12 +1,35 @@
 ---
 - name: prepare environment
   hosts: all
+  vars:
+    virtualenv: /python/2.6
   tasks:
+    - apt_repository: repo=ppa:fkrull/deadsnakes
     - apt: update_cache=yes cache_valid_time=86400
-    - apt: name=language-pack-en state=latest
-    - locale_gen: name=en_US.UTF-8
+    - apt: name={{ item }} state=present
+      with_items:
+        - python2.6-dev
+        - python-virtualenv
+        - libapt-pkg-dev
+    - file: path=/python state=directory
+    - shell: virtualenv -p /usr/bin/python2.6 2.6
+             chdir=/python
+             creates={{ virtualenv }}/bin/activate
+    - lineinfile:
+        line: source {{ virtualenv }}/bin/activate
+        dest: /root/.bashrc
+        state: present
+    - pip: name=requests virtualenv={{ virtualenv }}
+    - pip: name=python-apt virtualenv={{ virtualenv }} extra_args="--allow-unverified python-apt"
+    - pip: name=httplib2 virtualenv={{ virtualenv }}
 
 - name: perform tests
   hosts: all
+  vars:
+    ansible_python_interpreter: /python/2.6/bin/python
+  pre_tasks:
+    - name: assert correct python version
+      fail: msg="Expected to run tests against Python 2.6 but found {{ ansible_python_version }}"
+      when: not ansible_python_version|match('2\.6\.[0-9]+')
   roles:
     - test_couchdb_user

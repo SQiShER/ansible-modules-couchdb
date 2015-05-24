@@ -3,6 +3,7 @@
 # Test interactions with admin users
 #
 - include: admin/create.yml
+- include: admin/create_with_unknown_credentials.yml
 - include: admin/create_with_raw_passwords.yml
 - include: admin/change_password.yml
 - include: admin/change_password_unauthorized.yml

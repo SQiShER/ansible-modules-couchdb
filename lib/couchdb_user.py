@@ -75,11 +75,6 @@ options:
         description:
             - The password used to authenticate with
         required: false
-    authentication_db:
-        description:
-            - The name of the database in which the user accounts are stored
-        required: false
-        default: "_users"
 version_added: 1.9
 requirements: [ "requests" ]
 notes:
@@ -88,9 +83,46 @@ author: Daniel Bechler
 '''
 
 EXAMPLES = '''
----
-# Example
-    - foo
+# create an admin user (does not require login credentials when no other admin exists)
+- couchdb_user: name=heisenberg password=the-one-who-knocks admin=yes state=present
+
+# create another admin user (requires login credentials)
+- couchdb_user: >
+    name=gustavo
+    password=los-pollos-hermanos
+    admin=yes
+    state=present
+    login_user=heisenberg
+    login_password=the-one-who-knocks
+
+# create a regular user (by default users can create their own user documents)
+- couchdb_user: name=mike password=half-measures state=present
+
+# assign roles to that user
+- couchdb_user: >
+    name=mike
+    roles=cleaner,consultant
+    state=present
+    login_user=any-admin-or-the-target-user
+    login_password=password
+
+# change password (requires login credentials of either the target user or an admin)
+- couchdb_user: name=mike password=bulletproof state=present login_user=mike login_password=half-measures
+
+# assign a pre-generated password hash
+- couchdb_user: >
+    name=mike
+    password=-pbkdf2-4a1bc30e4f3a7c03ad703ca0fdc60b37580a2542,3600790547b8af251f385410cd702f0e,10
+    raw_password=yes
+    state=present
+    login_user=any-admin-or-the-target-user
+    login_password=password
+
+# remove admin user (requires login credentials of an admin user)
+- couchdb_user: name=gustavo admin=yes state=absent login_user=any-admin login_password=password
+
+# remove regular user (requires login credentials)
+- couchdb_user: name=mike state=absent login_user=any-admin-or-the-target-user login_password=password
 '''
 
 try:
@@ -103,6 +135,17 @@ try:
     import requests
     from requests.auth import AuthBase
     from requests.exceptions import ConnectionError
+
+    class HTTPCookieAuth(AuthBase):
+        def __init__(self, session_token):
+            self.session_token = session_token
+
+        def __call__(self, r):
+            r.headers['Cookies'] = None
+            r.prepare_cookies({
+                "AuthSession": self.session_token
+            })
+            return r
 except ImportError:
     HAS_REQUESTS = False
 
@@ -119,18 +162,6 @@ class AuthenticationException(Exception):
     def __init__(self, user, message):
         self.user = user
         self.message = message
-
-
-class HTTPCookieAuth(AuthBase):
-    def __init__(self, session_token):
-        self.session_token = session_token
-
-    def __call__(self, r):
-        r.headers['Cookies'] = None
-        r.prepare_cookies({
-            "AuthSession": self.session_token
-        })
-        return r
 
 
 class CouchDBClient:
@@ -326,14 +357,18 @@ class CouchDBClient:
 
     def _set_config_value(self, section, option, value, raw=False):
         url = self._get_absolute_url("/_config/{0}/{1}".format(section, option))
+        if raw:
+            params = {"raw": "true"}
+        else:
+            params = None
         r = requests.put(url, **{
             "headers": {"Accept": "application/json"},
             "auth": self._auth,
             "data": value,
-            "params": None if not raw else {"raw": "true"}
+            "params": params
         })
         if r.status_code == requests.codes.ok:
-            return True if r.text != value else False
+            return r.text != value
         else:
             raise self._create_exception(r)
 
@@ -374,7 +409,6 @@ def main():
             admin=dict(type='bool', choices=BOOLEANS, default='no'),
             roles=dict(type='list', default=None),
             state=dict(type='str', default="present", choices=["absent", "present"]),
-            authentication_db=dict(type='str', default='_users'),
             login_user=dict(type='str', required=False),
             login_password=dict(type='str', required=False, no_log=True)
         ),
@@ -392,9 +426,20 @@ def main():
     admin = module.params['admin']
     roles = module.params['roles']
     state = module.params['state']
-    authentication_db = module.params['authentication_db']
     login_user = module.params['login_user']
     login_password = module.params['login_password']
+
+    # I thought about making this configurable, but then thought it would be better to let the
+    # module figure it out on its own. Unfortunately once an admin account exists, the config API
+    # can only be accessed by admin users; so there is no reliable way to get this information.
+    #
+    # In order to make this work all non-admin-user-specific operations would need to be performed
+    # by an admin user. That seems overly restrictive, since its not an actual restriction of CouchDB.
+    # Even the CouchDB docs don't seem to have an answer on how a user is supposed to create his own
+    # document in case he or she doesn't know the name of the authentication_db.
+    #
+    # So for now I prefer to neglect this feature and wait to see if anyone actually needs it.
+    authentication_db = '_users'
 
     couchdb = CouchDBClient(host, port, login_user, login_password, authentication_db)
     try:
@@ -402,7 +447,8 @@ def main():
             if admin:
                 module.fail_json(msg="You need to be admin in order to remove admin users.")
             elif not couchdb.is_admin_party():
-                module.fail_json(msg="You need to be authenticated in order to remove users when you have admin users.")
+                module.fail_json(msg="You need to be authenticated in order to remove users "
+                                     "when you have admin users.")
 
         couchdb.login()
         changed = False
