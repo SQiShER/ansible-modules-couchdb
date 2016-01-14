@@ -7,4 +7,4 @@ before_install:
 install:
   - pip install ansible==1.9.1
 script:
-  - ansible-playbook -i test/integration/inventory test/integration/playbook.yml --connection=local --sudo
+  - cd test/integration && ansible-playbook -i inventory playbook.yml --connection=local --sudo
