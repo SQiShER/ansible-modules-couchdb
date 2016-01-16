@@ -3,6 +3,7 @@
 
 - name: user -> change_roles_unauthorized | test | attempt to change own roles
   couchdb_user: >
+    host={{ couchdb_host }}
     name={{ user_name }}
     password={{ user_password }}
     roles=foo,bar

@@ -1,6 +1,7 @@
 ---
 - name: user -> remove_noop | test | remove non-existing user (with non-existing credentials)
   couchdb_user: >
+    host={{ couchdb_host }}
     name={{ user_name }}
     state=absent
     login_user={{ user_name }}

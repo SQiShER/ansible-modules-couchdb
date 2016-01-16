@@ -4,7 +4,7 @@
 - include: ../__setup_user.yml
 
 - name: user -> remove_unauthorized | test | remove user without authentication
-  couchdb_user: name={{ user_name }} state=absent
+  couchdb_user: host={{ couchdb_host }} name={{ user_name }} state=absent
   register: result
   ignore_errors: yes
 
@@ -15,7 +15,7 @@
       - "result.msg == 'You need to be authenticated in order to remove users when you have admin users.'"
 
 - name: user -> remove_unauthorized | test | remove user with invalid authentication
-  couchdb_user: name={{ user_name }} state=absent login_user=any login_password=invalid
+  couchdb_user: host={{ couchdb_host }} name={{ user_name }} state=absent login_user=any login_password=invalid
   register: result
   ignore_errors: yes
 

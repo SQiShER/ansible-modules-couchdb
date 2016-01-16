@@ -1,6 +1,7 @@
 ---
 - name: cleanup | remove admin
   couchdb_user: >
+    host={{ couchdb_host }}
     name={{ admin_name }}
     admin=yes
     state=absent

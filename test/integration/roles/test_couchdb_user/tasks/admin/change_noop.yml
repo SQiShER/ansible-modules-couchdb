@@ -3,6 +3,7 @@
 
 - name: admin -> change_noop | test | create the same admin again
   couchdb_user: >
+    host={{ couchdb_host }}
     name={{ admin_name }}
     password={{ admin_password }}
     admin=yes

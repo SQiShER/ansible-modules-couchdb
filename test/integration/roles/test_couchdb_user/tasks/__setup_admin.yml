@@ -1,6 +1,7 @@
 ---
 - name: setup | create admin
   couchdb_user: >
+    host={{ couchdb_host }}
     name={{ admin_name }}
     password={{ admin_password }}
     admin=yes

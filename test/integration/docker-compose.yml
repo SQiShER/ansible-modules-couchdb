@@ -1,0 +1,12 @@
+tests:
+  container_name: ansiblecouchdbmodules-ci-tests
+  build: .
+  command: "/bin/true"
+  volumes:
+    - ../..:/ci
+  links:
+    - couchdb
+
+couchdb:
+  container_name: ansiblecouchdbmodules-ci-couchdb
+  image: klaemo/couchdb:1.6.1

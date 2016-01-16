@@ -1,6 +1,7 @@
 ---
 - name: cleanup | remove user
   couchdb_user: >
+    host={{ couchdb_host }}
     name={{ user_name }}
     state=absent
     login_user={{ user_name }}

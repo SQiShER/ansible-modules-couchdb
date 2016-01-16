@@ -3,6 +3,7 @@
 
 - name: admin -> remove | test | remove admin
   couchdb_user: >
+    host={{ couchdb_host }}
     name={{ admin_name }}
     password={{ admin_password }}
     admin=yes
@@ -15,6 +16,6 @@
   assert: { that: "result.changed == true" }
 
 - name: admin -> remove | test | assert admin user has actually been removed
-  uri: url=http://localhost:5984/_config/admins/{{ admin_name }} return_content=yes
+  uri: url=http://{{ couchdb_host }}:5984/_config/admins/{{ admin_name }} return_content=yes
   register: result
   failed_when: result.status != 404

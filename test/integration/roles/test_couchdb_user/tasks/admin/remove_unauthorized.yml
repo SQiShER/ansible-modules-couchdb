@@ -2,7 +2,7 @@
 - include: ../__setup_admin.yml
 
 - name: admin -> remove_unauthorized | test | remove admin without authentication
-  couchdb_user: name={{ admin_name }} admin=yes state=absent
+  couchdb_user: host={{ couchdb_host }} name={{ admin_name }} admin=yes state=absent
   register: result
   ignore_errors: yes
 

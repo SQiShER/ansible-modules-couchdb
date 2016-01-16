@@ -3,6 +3,7 @@
 
 - name: user -> remove | test | remove user
   couchdb_user: >
+    host={{ couchdb_host }}
     name={{ user_name }}
     state=absent
     login_user={{ user_name }}
@@ -14,7 +15,7 @@
 
 - name: user -> remove | verify | user document is gone
   uri:
-    url: http://localhost:5984/_users/org.couchdb.user:{{ user_name }}
+    url: http://{{ couchdb_host }}:5984/_users/org.couchdb.user:{{ user_name }}
     return_content: yes
     HEADER_Accept: application/json
     status_code: 404

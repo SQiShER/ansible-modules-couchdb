@@ -4,6 +4,7 @@
 
 - name: user -> change_roles | test | change user roles
   couchdb_user: >
+    host={{ couchdb_host }}
     name={{ user_name }}
     password={{ user_password }}
     roles=foo,bar
@@ -17,7 +18,7 @@
 
 - name: user -> change_roles | verify | fetch user document
   uri:
-    url: http://localhost:5984/_users/org.couchdb.user:{{ user_name }}
+    url: http://{{ couchdb_host }}:5984/_users/org.couchdb.user:{{ user_name }}
     return_content: yes
     user: "{{ user_name }}"
     password: "{{ user_password }}"

@@ -1,4 +1,6 @@
 ---
+couchdb_host: couchdb
+
 user_name: lester
 user_password: nygaard
 user_password_2: fargo
