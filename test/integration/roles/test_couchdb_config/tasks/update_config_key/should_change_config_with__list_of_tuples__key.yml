@@ -1,0 +1,21 @@
+---
+- name: should change config with list of tuples key
+  couchdb_config: >
+    host={{ couchdb_host }}
+    section='httpd'
+    key='socket_keys'
+    value='[{recbuf, 262143}, {sndbuf, 262143}]'
+  register: result
+
+- name: assert that module reports change
+  assert: { that: "result.changed == true" }
+
+- name: fetch config
+  uri:
+    url: http://{{ couchdb_host }}:5984/_config
+    return_content: yes
+    HEADER_Accept: application/json
+  register: result
+
+- name: assert that config can set list of tuples (e.g. '[{recbuf, 262143}, {sndbuf, 262143}]')
+  assert: { that: "result.json.httpd.socket_keys == '[{recbuf, 262143}, {sndbuf, 262143}]'" }

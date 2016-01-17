@@ -1,0 +1,42 @@
+---
+- include: ../__create_admin.yml
+
+- name: admin should be able to change multiple config values
+  couchdb_config:
+    host: '{{ couchdb_host }}'
+    user: '{{ admin_name }}'
+    password: '{{ admin_password }}'
+    section: "{{ item.section }}"
+    key: "{{ item.key }}"
+    value: "{{ item.value }}"
+  with_items:
+    - { section: 'compactions', key: '_default', value: '[{db_fragmentation, "51%"}, {view_fragmentation, "51%"}]' }
+    - { section: 'log', key: 'level', value: 'info' }
+    - { section: 'httpd', key: 'socket_options', value: '[{recbuf, 262155}, {sndbuf, 262155}, {nodelay, true}]' }
+  register: result
+
+- name: assert that module reports change
+  assert: { that: "result.changed == true" }
+
+- name: fetch config
+  uri:
+    url: http://{{ couchdb_host }}:5984/_config
+    user: "{{ admin_name }}"
+    password: "{{ admin_password }}"
+    force_basic_auth: yes
+    return_content: yes
+    HEADER_Accept: application/json
+  register: result
+
+- name: assert multiple changes were applied
+  assert:
+    that:
+      - "result.json.compactions._default == '[{db_fragmentation, \"51%\"}, {view_fragmentation, \"51%\"}]'"
+      - "result.json.log.level == 'info'"
+      - "result.json.httpd.socket_options == '[{recbuf, 262155}, {sndbuf, 262155}, {nodelay, true}]'"
+
+- include: ../__remove_admin.yml
+
+
+
+

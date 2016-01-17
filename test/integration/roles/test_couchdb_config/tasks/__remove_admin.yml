@@ -1,0 +1,9 @@
+---
+- name: remove admin
+  couchdb_user: >
+    host={{ couchdb_host }}
+    name={{ admin_name }}
+    admin=yes
+    state=absent
+    login_user={{ admin_name }}
+    login_password={{ admin_password }}

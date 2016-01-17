@@ -1,0 +1,22 @@
+---
+- name: should change config with string containing spaces key
+  couchdb_config: >
+    host={{ couchdb_host }}
+    section='query_servers'
+    key='coffeescript'
+    value='/usr/foo/bin/couchjs /usr/foo/share/couchdb/server/main-coffee.js'
+  register: result
+
+- name: assert that module reports change
+  assert: { that: "result.changed == true" }
+
+- name: fetch config
+  uri:
+    url: http://{{ couchdb_host }}:5984/_config
+    return_content: yes
+    HEADER_Accept: application/json
+  register: result
+
+- name: assert that config can set string with spaces (e.g. '/usr/foo/bin/couchjs /usr/foo/share/couchdb/server/main-coffee.js')
+  assert: { that: "result.json.query_servers.coffeescript == '/usr/foo/bin/couchjs /usr/foo/share/couchdb/server/main-coffee.js'" }
+
