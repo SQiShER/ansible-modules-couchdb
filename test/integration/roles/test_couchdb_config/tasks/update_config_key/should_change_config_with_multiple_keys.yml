@@ -1,0 +1,26 @@
+---
+- name: should change config with multiple keys
+  couchdb_config: >
+    host={{ couchdb_host }}
+    section={{ item.section }}
+    key={{ item.key }}
+    value={{ item.value }}
+  with_items:
+    - { section: 'couch_httpd_auth', key: 'timeout', value: '51' }
+    - { section: 'socket_keys', key: 'worker_batch_size', value: '501' }
+  register: result
+
+- name: assert that module reports change
+  assert: { that: "result.changed == true" }
+
+- name: fetch config
+  uri:
+    url: http://{{ couchdb_host }}:5984/_config
+    return_content: yes
+    HEADER_Accept: application/json
+  register: result
+
+- name: assert that config can set key 1
+  assert: { that: "result.json.couch_httpd_auth.timeout == '51'" }
+- name: assert that config can set key 2
+  assert: { that: "result.json.socket_keys.worker_batch_size == '501'" }

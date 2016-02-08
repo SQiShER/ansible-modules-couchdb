@@ -1,0 +1,13 @@
+---
+- name: should fail when couchdb is not connectable
+  couchdb_config: >
+    host=127.0.0.1
+    port=33333
+    section='stats'
+    key='samples'
+    value='[0, 61, 301, 901]'
+  register: result
+  ignore_errors: yes
+
+- name: assert failure when couchdb is not connectable
+  assert: { that: "result.msg == 'Failed to connect to http://127.0.0.1:33333'" }

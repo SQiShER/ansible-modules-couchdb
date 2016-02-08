@@ -1,0 +1,50 @@
+---
+- include: ../__create_admin.yml
+
+- name: admin adds a key
+  couchdb_config:
+    host: '{{ couchdb_host }}'
+    user: '{{ admin_name }}'
+    password: '{{ admin_password }}'
+    section: couch_httpd_auth
+    key: timeout
+    value: 42
+  register: result
+
+- name: fetch config
+  uri:
+    url: http://{{ couchdb_host }}:5984/_config
+    user: "{{ admin_name }}"
+    password: "{{ admin_password }}"
+    force_basic_auth: yes
+    return_content: yes
+    HEADER_Accept: application/json
+  register: result
+
+- name: assert that precondition is met
+  assert: { that: "result.json.couch_httpd_auth.has_key('timeout')" }
+
+- name: admin deletes key
+  couchdb_config:
+    host: '{{ couchdb_host }}'
+    user: '{{ admin_name }}'
+    password: '{{ admin_password }}'
+    section: couch_httpd_auth
+    key: timeout
+    state: absent
+  register: result
+
+- name: fetch config
+  uri:
+    url: http://{{ couchdb_host }}:5984/_config
+    user: "{{ admin_name }}"
+    password: "{{ admin_password }}"
+    force_basic_auth: yes
+    return_content: yes
+    HEADER_Accept: application/json
+  register: result
+
+- name: assert that key is no longer present
+  assert: { that: "result.json.couch_httpd_auth.has_key('timeout') == False" }
+
+- include: ../__remove_admin.yml

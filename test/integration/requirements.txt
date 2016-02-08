@@ -8,3 +8,4 @@ pycrypto==2.6.1
 PyYAML==3.11
 requests==2.9.1
 wheel==0.26.0
+pycouchdb==1.14

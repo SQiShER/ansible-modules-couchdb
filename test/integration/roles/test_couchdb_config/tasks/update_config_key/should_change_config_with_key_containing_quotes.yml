@@ -1,0 +1,21 @@
+---
+- name: should change config with key containing quotes
+  couchdb_config: >
+    host={{ couchdb_host }}
+    section='compactions'
+    key='_default'
+    value='[{db_fragmentation, \"50%\"}, {view_fragmentation, \"50%\"}]'
+  register: result
+
+- name: assert that module reports change
+  assert: { that: "result.changed == true" }
+
+- name: fetch config
+  uri:
+    url: http://{{ couchdb_host }}:5984/_config
+    return_content: yes
+    HEADER_Accept: application/json
+  register: result
+
+- name: assert that config can set string with quotes (e.g. '[{db_fragmentation, \"50%\"}, {view_fragmentation, \"50%\"}]')
+  assert: { that: "result.json.compactions._default == '[{db_fragmentation, \"50%\"}, {view_fragmentation, \"50%\"}]'" }

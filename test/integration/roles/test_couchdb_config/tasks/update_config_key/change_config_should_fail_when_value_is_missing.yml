@@ -1,0 +1,11 @@
+---
+- name: change config should fail when value is missing
+  couchdb_config:
+    host: '{{ couchdb_host }}'
+    section: replicator
+    key: connection_timeout
+  register: result
+  ignore_errors: yes
+
+- name: assert failure when value is missing
+  assert: { that: "result.msg == 'Failed. Please specify a value'" }

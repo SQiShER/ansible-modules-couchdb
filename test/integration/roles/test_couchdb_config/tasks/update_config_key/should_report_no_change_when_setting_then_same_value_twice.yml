@@ -1,0 +1,22 @@
+---
+- name: should report no change when setting then same value twice
+  couchdb_config:
+    host: '{{ couchdb_host }}'
+    section: couch_httpd_auth
+    key: timeout
+    value: 661
+  register: result
+
+- name: assert that module reports change
+  assert: { that: "result.changed == true" }
+
+- name: setting then same value twice
+  couchdb_config:
+    host: '{{ couchdb_host }}'
+    section: couch_httpd_auth
+    key: timeout
+    value: 661
+  register: result
+
+- name: assert that module reports no change
+  assert: { that: "result.changed == false" }
