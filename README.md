@@ -24,6 +24,19 @@ You'll also find plenty more examples in the [integration test suite](https://gi
 
 This module lets you easily change the configuration of a running CouchDB instance via the REST API.
 
+### Installation
+
+To use it, just copy the file [`lib/couchdb_config.py`](https://raw.githubusercontent.com/SQiShER/ansible-modules-couchdb/master/lib/couchdb_config.py) into one of your Ansible [library folders](http://docs.ansible.com/intro_configuration.html#library).
+
+### Example
+
+```yaml
+- name: change httpd configuration
+  couchdb_config: section=httpd key=socket_keys value='[{recbuf, 262140}, {sndbuf, 262140}]'
+```
+
+More examples can be found in the [integration test suite](https://github.com/SQiShER/ansible-modules-couchdb/tree/master/test/integration/roles/test_couchdb_config/tasks).
+
 ## couchdb_database
 
 Currently work in progress.
