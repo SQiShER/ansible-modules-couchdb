@@ -208,7 +208,7 @@ class CouchDBClient:
         data = "name={0}&password={1}".format(username, password)
         headers = {
             "Accept": "application/json",
-            "Content-Length": len(data),
+            "Content-Length": str(len(data)),
             "Content-Type": "application/x-www-form-urlencoded"
         }
         r = requests.post(url, headers=headers, data=data)
