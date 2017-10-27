@@ -43,6 +43,10 @@ options:
             - The port to connect to
         required: false
         default: 5984
+    node:
+        description:
+            - The cluster node to apply the changes to. Required for CouchDB 2.0 and later
+        required: false
     password:
         description:
             - The password of the user
@@ -140,6 +144,7 @@ try:
     from requests.exceptions import ConnectionError
 
     class HTTPCookieAuth(AuthBase):
+
         def __init__(self, session_token):
             self.session_token = session_token
 
@@ -154,6 +159,7 @@ except ImportError:
 
 
 class CouchDBException(Exception):
+
     def __init__(self, status_code, error_type="unknown", reason=None, origin=None):
         self.status_code = status_code
         self.error_type = error_type
@@ -162,19 +168,22 @@ class CouchDBException(Exception):
 
 
 class AuthenticationException(Exception):
+
     def __init__(self, user, message):
         self.user = user
         self.message = message
 
 
 class CouchDBClient:
-    def __init__(self, host="localhost", port="5984", login_user=None, login_password=None, authentication_db="_users"):
+
+    def __init__(self, host="localhost", port="5984", login_user=None, login_password=None, authentication_db="_users", node=None):
         self._auth = None
         self.host = host
         self.port = port
         self.login_user = login_user
         self.login_password = login_password
         self.authentication_db = authentication_db
+        self.node = node
 
     def login(self):
         self._auth = None
@@ -344,11 +353,17 @@ class CouchDBClient:
     def _get_user_url(self, username):
         return self._get_absolute_url("/{0}/org.couchdb.user:{1}".format(self.authentication_db, username))
 
-    def _get_config_value(self, section, option=None):
+    def _get_config_url(self, section, option=None):
+        path_elements = []
+        if self.node:
+            path_elements.append('/_node/{0}'.format(self.node))
+        path_elements.append('/_config/{0}'.format(section))
         if option:
-            url = self._get_absolute_url("/_config/{0}/{1}".format(section, option))
-        else:
-            url = self._get_absolute_url("/_config/{0}".format(section))
+            path_elements.append('/{0}'.format(option))
+        return self._get_absolute_url(''.join(path_elements))
+
+    def _get_config_value(self, section, option=None):
+        url = self._get_config_url(section, option)
         r = requests.get(url, auth=self._auth)
         if r.status_code == requests.codes.ok:
             value = r.text
@@ -359,11 +374,8 @@ class CouchDBClient:
             raise self._create_exception(r)
 
     def _set_config_value(self, section, option, value, raw=False):
-        url = self._get_absolute_url("/_config/{0}/{1}".format(section, option))
-        if raw:
-            params = {"raw": "true"}
-        else:
-            params = None
+        url = self._get_config_url(section, option)
+        params = {"raw": "true"} if raw else None
         r = requests.put(url, **{
             "headers": {"Accept": "application/json"},
             "auth": self._auth,
@@ -413,7 +425,8 @@ def main():
             roles=dict(type='list', default=None),
             state=dict(type='str', default="present", choices=["absent", "present"]),
             login_user=dict(type='str', required=False),
-            login_password=dict(type='str', required=False, no_log=True)
+            login_password=dict(type='str', required=False, no_log=True),
+            node=dict(type='str', required=False)
         ),
         required_together=[['login_user', 'login_password']]
     )
@@ -423,6 +436,7 @@ def main():
 
     host = module.params['host']
     port = module.params['port']
+    node = module.params['node']
     username = module.params['name']
     password = module.params['password']
     raw_password = module.params['raw_password']
@@ -444,7 +458,7 @@ def main():
     # So for now I prefer to neglect this feature and wait to see if anyone actually needs it.
     authentication_db = '_users'
 
-    couchdb = CouchDBClient(host, port, login_user, login_password, authentication_db)
+    couchdb = CouchDBClient(host, port, login_user, login_password, authentication_db, node)
     try:
         if state == "absent" and not login_user:
             if admin:

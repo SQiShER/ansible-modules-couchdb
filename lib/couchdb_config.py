@@ -67,6 +67,10 @@ options:
             - The port to connect to
         required: false
         default: 5984
+    node:
+        description:
+            - The cluster node to apply the changes to. Required for CouchDB 2.0 and later.
+        required: false
     user:
         description:
             - The administrator user used to authenticate with
@@ -152,6 +156,7 @@ def main():
             port=dict(type='int', default=5984),
             user=dict(type='str'),
             password=dict(type='str', no_log=True),
+            node=dict(type='str'),
             section=dict(type='str', required=True),
             key=dict(type='str', required=True),
             value=dict(type='str'),
@@ -171,6 +176,7 @@ def main():
     couchdb_uri = create_couchdb_uri(module.params['host'], module.params['port'],
                                      user=module.params['user'], password=module.params['password'])
 
+    node = module.params['node']
     section = module.params['section']
     key = module.params['key']
     value = module.params['value']
@@ -180,9 +186,9 @@ def main():
         if state == "present":
             if value is None:
                 module.fail_json(msg='Failed. Please specify a value')
-            is_changed = update_configuration_key(couchdb_uri, section, key, value)
+            is_changed = update_configuration_key(couchdb_uri, node, section, key, value)
         if state == "absent":
-            is_changed = delete_configuration_key(couchdb_uri, section, key)
+            is_changed = delete_configuration_key(couchdb_uri, node, section, key)
     except ConnectionError:
         module.fail_json(msg='Failed to connect to ' + couchdb_uri)
     except AuthenticationFailed:
@@ -209,8 +215,17 @@ def create_couchdb_uri(host, port, user=None, password=None):
     return ''.join(['http://', auth, host, ':{0}'.format(port)])
 
 
-def update_configuration_key(uri, section, key, value):
-    response = Resource(uri).put('_config/{0}/{1}'.format(section, key), data=json.dumps(value))
+def resource_path_to_key(node, section, key):
+    if node:
+        path = '_node/{0}/_config/{1}/{2}'.format(node, section, key)
+    else:
+        path = '_config/{0}/{1}'.format(section, key)
+    return path
+
+
+def update_configuration_key(uri, node, section, key, value):
+    path = resource_path_to_key(node, section, key)
+    response = Resource(uri).put(path, data=json.dumps(value))
     if response is not None and response[1] == value:
         is_changed = False
     else:
@@ -218,8 +233,9 @@ def update_configuration_key(uri, section, key, value):
     return is_changed
 
 
-def delete_configuration_key(uri, section, key):
-    response = Resource(uri).delete('_config/{0}/{1}'.format(section, key))
+def delete_configuration_key(uri, node, section, key):
+    path = resource_path_to_key(node, section, key)
+    response = Resource(uri).delete(path)
     result = json.loads(response[1])
     if type(result) is dict and 'error' in result:
         is_changed = False
