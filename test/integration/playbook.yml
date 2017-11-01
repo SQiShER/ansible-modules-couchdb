@@ -9,5 +9,7 @@
       fail: msg="Expected to run tests against Python 2.7 but found {{ ansible_python_version }}"
       when: not ansible_python_version|match('2\.7\.[0-9]+')
   roles:
-    - test_couchdb_user
-    - test_couchdb_config
+    - role: test_couchdb_user
+      tags: [couchdb_user]
+    - role: test_couchdb_config
+      tags: [couchdb_config]

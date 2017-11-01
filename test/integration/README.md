@@ -13,6 +13,3 @@ docker-compose run --rm tests ansible-playbook -i inventory playbook.yml
 docker-compose stop
 docker-compose rm -f
 ```
-
-## Legacy
-Initially the tests were executed with Vagrant. The Vagrant setup still works, but will not be maintained anymore.
