@@ -1,6 +1,6 @@
 ---
 - name: admin -> remove_noop | test | remove unknown admin
-  couchdb_user: host={{ couchdb_host }} name=unknown admin=yes state=absent login_user=unknown login_password=unknown
+  couchdb_user: host={{ couchdb_host }} node={{ couchdb_node|default(omit) }} name=unknown admin=yes state=absent login_user=unknown login_password=unknown
   register: result
 
 - name: admin -> remove_noop | test | assert module reports no change

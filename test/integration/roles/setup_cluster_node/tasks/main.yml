@@ -1,0 +1,13 @@
+---
+- name: perform cluster setup
+  uri:
+    method: POST
+    url: http://couchdb2:5984/_cluster_setup
+    body_format: json
+    body:
+      action: enable_single_node
+      bind_address: "0.0.0.0"
+      port: 5984
+      singlenode: true
+      ensure_dbs_exist: ["_users", "_replicator"]
+    status_code: 201

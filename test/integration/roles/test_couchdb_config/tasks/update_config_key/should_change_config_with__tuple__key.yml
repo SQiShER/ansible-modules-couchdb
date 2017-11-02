@@ -2,6 +2,7 @@
 - name: should change config with tuple key
   couchdb_config: >
     host={{ couchdb_host }}
+    node={{ couchdb_node|default(omit) }}
     section='httpd'
     key='default_handler'
     value='{couch_httpd_db, handle_request, foo_bar}'
@@ -12,10 +13,19 @@
 
 - name: fetch config
   uri:
-    url: http://{{ couchdb_host }}:5984/_config
+    url: http://{{ couchdb_host }}:5984{{ couchdb_config_endpoint }}/httpd/default_handler
     return_content: yes
-    HEADER_Accept: application/json
+    headers:
+      Accept: application/json
   register: result
 
-- name: assert that config can set tuple (e.g. '{couch_httpd_db, handle_request, foo_bar}')
-  assert: { that: "result.json.httpd.default_handler == '{couch_httpd_db, handle_request, foo_bar}'" }
+- name: assert that config can set tuple
+  assert: { that: "result.json == '{couch_httpd_db, handle_request, foo_bar}'" }
+
+- name: cleanup config
+  couchdb_config: >
+    host={{ couchdb_host }}
+    node={{ couchdb_node|default(omit) }}
+    section='httpd'
+    key='default_handler'
+    value='{couch_httpd_db, handle_request}'

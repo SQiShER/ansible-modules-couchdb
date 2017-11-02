@@ -1,9 +1,10 @@
 ---
-- include: ../__create_admin.yml
+- import_tasks: ../__create_admin.yml
 
 - name: user should not be able to change config
   couchdb_config: >
     host={{ couchdb_host }}
+    node={{ couchdb_node|default(omit) }}
     user={{ user_name }}
     password={{ user_password }}
     section='couch_httpd_auth'
@@ -12,10 +13,7 @@
   register: result
   ignore_errors: yes
 
-- name: url
-  debug: msg="result => {{ result }}"
-
 - name: assert failure when not an admin
-  assert: { that: "'unauthorized' in result.exception" }
+  assert: { that: "'unauthorized' in result.msg" }
 
-- include: ../__remove_admin.yml
+- import_tasks: ../__remove_admin.yml

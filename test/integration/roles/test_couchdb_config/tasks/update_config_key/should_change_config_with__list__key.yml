@@ -2,6 +2,7 @@
 - name: should change config with list key
   couchdb_config: >
     host={{ couchdb_host }}
+    node={{ couchdb_node|default(omit) }}
     section='stats'
     key='samples'
     value='[0, 61, 301, 901]'
@@ -12,9 +13,10 @@
 
 - name: fetch config
   uri:
-    url: http://{{ couchdb_host }}:5984/_config
+    url: http://{{ couchdb_host }}:5984{{ couchdb_config_endpoint }}
     return_content: yes
-    HEADER_Accept: application/json
+    headers:
+      Accept: application/json
   register: result
 
 - name: assert that config can set list (e.g. '[0, 61, 301, 901]')

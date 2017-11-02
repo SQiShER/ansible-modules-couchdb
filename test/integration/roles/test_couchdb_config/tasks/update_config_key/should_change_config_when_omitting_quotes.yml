@@ -2,6 +2,7 @@
 - name: should change config with single value key
   couchdb_config:
     host: '{{ couchdb_host }}'
+    node: '{{ couchdb_node|default(omit) }}'
     section: couch_httpd_auth
     key: timeout
     value: 44
@@ -12,9 +13,10 @@
 
 - name: fetch config
   uri:
-    url: http://{{ couchdb_host }}:5984/_config
+    url: http://{{ couchdb_host }}:5984{{ couchdb_config_endpoint }}
     return_content: yes
-    HEADER_Accept: application/json
+    headers:
+      Accept: application/json
   register: result
 
 - name: assert that config can set single value (e.g. 44)

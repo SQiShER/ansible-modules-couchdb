@@ -249,7 +249,7 @@ class CouchDBClient:
         return self._set_config_value("admins", username, '"{0}"'.format(password), raw=raw_password)
 
     def remove_admin_user(self, username):
-        url = self._get_absolute_url("/_config/admins/{0}".format(username))
+        url = self._get_config_url("admins", username)
         headers = {"Accept": "application/json"}
         r = requests.delete(url, headers=headers, auth=self._auth)
         if r.status_code == requests.codes.ok:

@@ -2,6 +2,7 @@
 - name: add a key
   couchdb_config:
     host: '{{ couchdb_host }}'
+    node: '{{ couchdb_node|default(omit) }}'
     section: couch_httpd_auth
     key: timeout
     value: 42
@@ -9,9 +10,10 @@
 
 - name: fetch config
   uri:
-    url: http://{{ couchdb_host }}:5984/_config
+    url: http://{{ couchdb_host }}:5984{{ couchdb_config_endpoint }}
     return_content: yes
-    HEADER_Accept: application/json
+    headers:
+      Accept: application/json
   register: result
 
 - name: assert that precondition is met
@@ -20,6 +22,7 @@
 - name: delete key
   couchdb_config:
     host: '{{ couchdb_host }}'
+    node: '{{ couchdb_node|default(omit) }}'
     section: couch_httpd_auth
     key: timeout
     state: absent
@@ -27,9 +30,10 @@
 
 - name: fetch config
   uri:
-    url: http://{{ couchdb_host }}:5984/_config
+    url: http://{{ couchdb_host }}:5984{{ couchdb_config_endpoint }}
     return_content: yes
-    HEADER_Accept: application/json
+    headers:
+      Accept: application/json
   register: result
 
 - name: assert that key is no longer present

@@ -129,7 +129,7 @@ IS_INSTALLED_PYCOUCHDB = True
 try:
     import pycouchdb
     from pycouchdb.resource import Resource
-    from pycouchdb.exceptions import Conflict, NotFound, BadRequest, AuthenticationFailed
+    from pycouchdb.exceptions import GenericError, Conflict, NotFound, BadRequest, AuthenticationFailed
 except ImportError:
     IS_INSTALLED_PYCOUCHDB = False
     pycouchdb = None
@@ -138,6 +138,7 @@ except ImportError:
     NotFound = None
     BadRequest = None
     AuthenticationFailed = None
+    GenericError = None
 
 IS_INSTALLED_REQUESTS = True
 try:
@@ -201,6 +202,8 @@ def main():
         module.fail_json(msg='Bad request, maybe your values are not a not valid JSON strings')
     except RuntimeError:
         module.fail_json(msg='Unexpected error, maybe your authentication method is invalid')
+    except GenericError as error:
+        module.fail_json(msg=error.args[0]['error'], reason=error.args[0]['reason'])
 
     kwargs = {}
     module.exit_json(changed=is_changed, **kwargs)

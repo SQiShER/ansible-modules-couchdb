@@ -1,9 +1,10 @@
 ---
-- include: ../__setup_user.yml
+- import_tasks: ../__setup_user.yml
 
 - name: user -> remove | test | remove user
   couchdb_user: >
     host={{ couchdb_host }}
+    node={{ couchdb_node|default(omit) }}
     name={{ user_name }}
     state=absent
     login_user={{ user_name }}
@@ -17,5 +18,6 @@
   uri:
     url: http://{{ couchdb_host }}:5984/_users/org.couchdb.user:{{ user_name }}
     return_content: yes
-    HEADER_Accept: application/json
+    headers:
+      Accept: application/json
     status_code: 404

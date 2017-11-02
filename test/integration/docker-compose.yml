@@ -6,7 +6,12 @@ tests:
     - ../..:/ci
   links:
     - couchdb
+    - couchdb2
 
 couchdb:
   container_name: ansiblecouchdbmodules-ci-couchdb
   image: klaemo/couchdb:1.6.1
+
+couchdb2:
+  container_name: ansiblecouchdbmodules-ci-couchdb2
+  image: apache/couchdb:2.1.0

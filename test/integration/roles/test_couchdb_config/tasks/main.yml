@@ -3,29 +3,29 @@
 # Tests around deleting keys from the configuration
 #
 
-- include: delete_config_key/secured_db_admin_should_be_able_to_delete_key.yml
-- include: delete_config_key/secured_db_user_should_not_be_able_to_delete_key.yml
+- import_tasks: delete_config_key/secured_db_admin_should_be_able_to_delete_key.yml
+- import_tasks: delete_config_key/secured_db_user_should_not_be_able_to_delete_key.yml
 
-- include: delete_config_key/should_delete_key.yml
-- include: delete_config_key/should_fail_when_key_not_found.yml
+- import_tasks: delete_config_key/should_delete_key.yml
+- import_tasks: delete_config_key/should_fail_when_key_not_found.yml
 
 
 # ===============================================
 # Tests around updating the configuration
 #
 
-- include: update_config_key/secured_db_admin_should_be_able_to_change_multiple_config_values.yml
-- include: update_config_key/secured_db_admin_should_be_able_to_change_config.yml
-- include: update_config_key/secured_db_user_should_not_be_able_to_change_config.yml
+- import_tasks: update_config_key/secured_db_admin_should_be_able_to_change_multiple_config_values.yml
+- import_tasks: update_config_key/secured_db_admin_should_be_able_to_change_config.yml
+- import_tasks: update_config_key/secured_db_user_should_not_be_able_to_change_config.yml
 
-- include: update_config_key/should_change_config_when_omitting_quotes.yml
-- include: update_config_key/should_fail_when_couchdb_is_not_connectable.yml
-- include: update_config_key/should_change_config_with_multiple_keys.yml
-- include: update_config_key/should_change_config_with__single_value__key.yml
-- include: update_config_key/should_change_config_with__tuple__key.yml
-- include: update_config_key/should_change_config_with__list_of_tuples__key.yml
-- include: update_config_key/should_change_config_with__list__key.yml
-- include: update_config_key/should_change_config_with__string_containing_spaces__key.yml
-- include: update_config_key/should_change_config_with_key_containing_quotes.yml
-- include: update_config_key/should_report_no_change_when_setting_then_same_value_twice.yml
-- include: update_config_key/change_config_should_fail_when_value_is_missing.yml
+- import_tasks: update_config_key/should_change_config_when_omitting_quotes.yml
+- import_tasks: update_config_key/should_fail_when_couchdb_is_not_connectable.yml
+- import_tasks: update_config_key/should_change_config_with_multiple_keys.yml
+- import_tasks: update_config_key/should_change_config_with__single_value__key.yml
+- import_tasks: update_config_key/should_change_config_with__tuple__key.yml
+- import_tasks: update_config_key/should_change_config_with__list_of_tuples__key.yml
+- import_tasks: update_config_key/should_change_config_with__list__key.yml
+- import_tasks: update_config_key/should_change_config_with__string_containing_spaces__key.yml
+- import_tasks: update_config_key/should_change_config_with_key_containing_quotes.yml
+- import_tasks: update_config_key/should_report_no_change_when_setting_then_same_value_twice.yml
+- import_tasks: update_config_key/change_config_should_fail_when_value_is_missing.yml

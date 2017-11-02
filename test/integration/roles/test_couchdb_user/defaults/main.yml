@@ -1,5 +1,6 @@
 ---
 couchdb_host: couchdb
+couchdb_config_endpoint: /_config
 
 user_name: lester
 user_password: nygaard

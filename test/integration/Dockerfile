@@ -1,7 +1,5 @@
-FROM python:2.7-slim
-RUN mkdir -p /ci/test/integration
+FROM hypoport/ansible:2.4.1.0
 WORKDIR /ci/test/integration
-RUN apt-get update && apt-get install -y gcc libc-dev
 COPY requirements.txt /
 RUN pip install --upgrade -r /requirements.txt
 CMD [ "ansible-playbook", "-i", "inventory", "playbook.yml" ]

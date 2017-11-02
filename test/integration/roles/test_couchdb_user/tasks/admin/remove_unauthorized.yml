@@ -1,8 +1,8 @@
 ---
-- include: ../__setup_admin.yml
+- import_tasks: ../__setup_admin.yml
 
 - name: admin -> remove_unauthorized | test | remove admin without authentication
-  couchdb_user: host={{ couchdb_host }} name={{ admin_name }} admin=yes state=absent
+  couchdb_user: host={{ couchdb_host }} node={{ couchdb_node|default(omit) }} name={{ admin_name }} admin=yes state=absent
   register: result
   ignore_errors: yes
 
@@ -12,4 +12,4 @@
       - "result.failed == true"
       - "result.msg == 'You need to be admin in order to remove admin users.'"
 
-- include: ../__cleanup_admin.yml
+- import_tasks: ../__cleanup_admin.yml

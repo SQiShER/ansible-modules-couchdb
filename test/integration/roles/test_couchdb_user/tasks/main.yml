@@ -2,31 +2,31 @@
 # ===============================================
 # Test interactions with admin users
 #
-- include: admin/create.yml
-- include: admin/create_with_unknown_credentials.yml
-- include: admin/create_with_raw_passwords.yml
-- include: admin/change_password.yml
-- include: admin/change_password_unauthorized.yml
-- include: admin/change_noop.yml
-- include: admin/remove.yml
-- include: admin/remove_noop.yml
-- include: admin/remove_unauthorized.yml
+- import_tasks: admin/create.yml
+- import_tasks: admin/create_with_unknown_credentials.yml
+- import_tasks: admin/create_with_raw_passwords.yml
+- import_tasks: admin/change_password.yml
+- import_tasks: admin/change_password_unauthorized.yml
+- import_tasks: admin/change_noop.yml
+- import_tasks: admin/remove.yml
+- import_tasks: admin/remove_noop.yml
+- import_tasks: admin/remove_unauthorized.yml
 
 # ===============================================
 # Test interactions with regular users
 #
-- include: user/create.yml
-- include: user/change_password.yml
-- include: user/change_password_raw.yml
-- include: user/change_password_unauthorized.yml
-- include: user/change_roles.yml
-- include: user/change_roles_unauthorized.yml
-- include: user/change_noop.yml
-- include: user/remove.yml
-- include: user/remove_noop.yml
-- include: user/remove_unauthorized.yml
+- import_tasks: user/create.yml
+- import_tasks: user/change_password.yml
+- import_tasks: user/change_password_raw.yml
+- import_tasks: user/change_password_unauthorized.yml
+- import_tasks: user/change_roles.yml
+- import_tasks: user/change_roles_unauthorized.yml
+- import_tasks: user/change_noop.yml
+- import_tasks: user/remove.yml
+- import_tasks: user/remove_noop.yml
+- import_tasks: user/remove_unauthorized.yml
 
 # ===============================================
 # Test miscellaneous stuff
 #
-- include: misc/connection_refused.yml
+- import_tasks: misc/connection_refused.yml

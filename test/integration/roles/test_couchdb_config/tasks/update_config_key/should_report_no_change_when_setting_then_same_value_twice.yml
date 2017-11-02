@@ -2,6 +2,7 @@
 - name: should report no change when setting then same value twice
   couchdb_config:
     host: '{{ couchdb_host }}'
+    node: '{{ couchdb_node|default(omit) }}'
     section: couch_httpd_auth
     key: timeout
     value: 661
@@ -13,6 +14,7 @@
 - name: setting then same value twice
   couchdb_config:
     host: '{{ couchdb_host }}'
+    node: '{{ couchdb_node|default(omit) }}'
     section: couch_httpd_auth
     key: timeout
     value: 661

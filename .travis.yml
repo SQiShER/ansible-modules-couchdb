@@ -5,7 +5,8 @@ before_script:
   - cd test/integration
   - docker-compose up -d
 script:
-  - docker-compose run --rm tests ansible-playbook -i inventory playbook.yml
+  - docker-compose run --rm tests ansible-playbook -i inventory_16.yml playbook.yml
+  - docker-compose run --rm tests ansible-playbook -i inventory_21.yml playbook.yml
 after_script:
   - docker-compose stop
   - docker-compose rm -f

@@ -1,9 +1,10 @@
 ---
-- include: ../__setup_user.yml
+- import_tasks: ../__setup_user.yml
 
 - name: user -> change_noop | test | create user again
   couchdb_user: >
     host={{ couchdb_host }}
+    node={{ couchdb_node|default(omit) }}
     name={{ user_name }}
     password={{ user_password }}
     state=present
@@ -12,4 +13,4 @@
 - name: user -> change_noop | test | assert no change reported
   assert: { that: "result.changed == false" }
 
-- include: ../__cleanup_user.yml
+- import_tasks: ../__cleanup_user.yml

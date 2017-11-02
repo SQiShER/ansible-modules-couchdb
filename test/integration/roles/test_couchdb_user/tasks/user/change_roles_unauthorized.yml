@@ -1,9 +1,10 @@
 ---
-- include: ../__setup_user.yml
+- import_tasks: ../__setup_user.yml
 
 - name: user -> change_roles_unauthorized | test | attempt to change own roles
   couchdb_user: >
     host={{ couchdb_host }}
+    node={{ couchdb_node|default(omit) }}
     name={{ user_name }}
     password={{ user_password }}
     roles=foo,bar
@@ -20,4 +21,4 @@
       - "result.error == 'forbidden'"
       - "result.msg == 'Only _admin may edit roles'"
 
-- include: ../__cleanup_user.yml
+- import_tasks: ../__cleanup_user.yml

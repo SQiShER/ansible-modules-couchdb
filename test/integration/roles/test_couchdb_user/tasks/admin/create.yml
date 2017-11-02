@@ -1,6 +1,6 @@
 ---
 - name: admin -> create | test | create admin
-  couchdb_user: host={{ couchdb_host }} name={{ admin_name }} password={{ admin_password }} admin=yes state=present
+  couchdb_user: host={{ couchdb_host }} node={{ couchdb_node|default(omit) }} name={{ admin_name }} password={{ admin_password }} admin=yes state=present
   register: result
 
 - name: admin -> create | test | assert module reports change
@@ -8,11 +8,11 @@
 
 - name: admin -> create | test | fetch password hash of the newly created admin
   uri:
-    url: http://{{ couchdb_host }}:5984/_config/admins/{{ admin_name }}
+    url: http://{{ couchdb_host }}:5984{{ couchdb_config_endpoint }}/admins/{{ admin_name }}
     return_content: yes
     user: "{{ admin_name }}"
     password: "{{ admin_password }}"
     force_basic_auth: yes
   register: result
 
-- include: ../__cleanup_admin.yml
+- import_tasks: ../__cleanup_admin.yml

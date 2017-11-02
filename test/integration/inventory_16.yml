@@ -1,0 +1,8 @@
+---
+all:
+  hosts:
+    localhost:
+      ansible_connection: local
+      couchdb_host: couchdb
+      couchdb_config_endpoint: /_config
+      couchdb_version: 1
