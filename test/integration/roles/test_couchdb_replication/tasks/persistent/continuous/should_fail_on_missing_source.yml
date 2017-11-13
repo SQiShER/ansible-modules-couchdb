@@ -28,7 +28,7 @@
         name: test_replication
         state: present
       register: replication
-      failed_when: replication.state != 'crashing'
+      failed_when: replication.state not in ['crashing','error']
   always:
     - name: cleanup source and target databases
       uri:

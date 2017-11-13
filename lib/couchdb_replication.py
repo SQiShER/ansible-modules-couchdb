@@ -117,7 +117,7 @@ def run_module():
 
                 for i in range(0, 20):
                     time.sleep(0.25)
-                    if major_version <= 1:
+                    if int(major_version) <= 1:
                         replication_doc = couchdb.database(replicator_database).get(name)
                         replication_state = replication_doc['_replication_state']
                     else:
@@ -125,7 +125,7 @@ def run_module():
                         scheduler_doc = requests.get(url).json()
                         replication_state = scheduler_doc.get('state', None)
                     result['state'] = replication_state
-                    if replication_state:
+                    if replication_state == 'running':
                         break
                 result['failed'] = replication_state in ['failed', 'crashing', 'error']
             elif state == 'absent':
