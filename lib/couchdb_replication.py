@@ -119,7 +119,7 @@ def run_module():
                     time.sleep(0.25)
                     if int(major_version) <= 1:
                         replication_doc = couchdb.database(replicator_database).get(name)
-                        replication_state = replication_doc['_replication_state']
+                        replication_state = replication_doc.get('_replication_state', None)
                     else:
                         url = base_url + '_scheduler/docs/' + replicator_database + '/' + name
                         scheduler_doc = requests.get(url).json()
