@@ -1,0 +1,41 @@
+---
+- block:
+    - name: given alternative replicator database
+      uri:
+        method: PUT
+        url: http://{{ couchdb_host }}:5984/{{ alternative_replicator_db|replace('/', '%2F') }}
+        user: "{{ admin_name }}"
+        password: "{{ admin_password }}"
+        force_basic_auth: yes
+        status_code: 201
+    - name: when replication is triggered on alternative replicator database
+      couchdb_replication:
+        host: "{{ couchdb_host }}"
+        user: "{{ admin_name }}"
+        password: "{{ admin_password }}"
+        source: test_once_db
+        target: test_once_db2
+        create_target: yes
+        continuous: yes
+        persistent: yes
+        replicator_database: "{{ alternative_replicator_db }}"
+        name: test_replication
+        state: present
+    - name: then replication document should be present in the alternative database
+      uri:
+        url: http://{{ couchdb_host }}:5984/{{ alternative_replicator_db|replace('/', '%2F') }}/test_replication
+        user: "{{ admin_name }}"
+        password: "{{ admin_password }}"
+        force_basic_auth: yes
+        status_code: 200
+  always:
+    - name: cleanup source and target databases
+      uri:
+        method: DELETE
+        url: http://{{ couchdb_host }}:5984/{{item}}
+        user: "{{ admin_name }}"
+        password: "{{ admin_password }}"
+        force_basic_auth: yes
+      ignore_errors: yes
+      with_items:
+        - "{{ alternative_replicator_db|replace('/', '%2F') }}"

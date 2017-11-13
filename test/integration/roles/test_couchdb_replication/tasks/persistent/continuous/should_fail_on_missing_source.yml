@@ -1,0 +1,48 @@
+---
+- block:
+    - name: when replication is triggered
+      couchdb_replication:
+        host: "{{ couchdb_host }}"
+        user: "{{ admin_name }}"
+        password: "{{ admin_password }}"
+        source: non_existing_db
+        target: target_db
+        create_target: yes
+        continuous: yes
+        persistent: yes
+        name: test_replication
+        state: present
+      ignore_errors: yes
+      register: replication
+    - pause: seconds=3
+    - name: then replication state should be crashing
+      couchdb_replication:
+        host: "{{ couchdb_host }}"
+        user: "{{ admin_name }}"
+        password: "{{ admin_password }}"
+        source: non_existing_db
+        target: target_db
+        create_target: yes
+        continuous: yes
+        persistent: yes
+        name: test_replication
+        state: present
+      register: replication
+      failed_when: replication.state != 'crashing'
+  always:
+    - name: cleanup source and target databases
+      uri:
+        method: DELETE
+        url: http://{{ couchdb_host }}:5984/test_once_db2
+        user: "{{ admin_name }}"
+        password: "{{ admin_password }}"
+        force_basic_auth: yes
+      ignore_errors: yes
+    - name: cleanup replication database
+      couchdb_replication:
+        host: "{{ couchdb_host }}"
+        user: "{{ admin_name }}"
+        password: "{{ admin_password }}"
+        name: test_replication
+        persistent: yes
+        state: absent

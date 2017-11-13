@@ -1,0 +1,23 @@
+---
+- import_tasks: __create_admin.yml
+
+- name: replicate once
+  block:
+    - import_tasks: transient/once/should_replicate_once_locally.yml
+    - import_tasks: transient/once/should_replicate_once_to_remote_host.yml
+    - import_tasks: transient/once/should_replicate_once_from_remote_host.yml
+    - import_tasks: transient/once/should_handle_missing_target_gracefully.yml
+  tags: [once]
+
+- name: replicate continuously
+  block:
+    - import_tasks: persistent/continuous/should_replicate_continuously_from_remote_host.yml
+    - import_tasks: persistent/continuous/should_replicate_continuously_to_remote_host.yml
+    - import_tasks: persistent/continuous/should_replicate_continuously_locally.yml
+    - import_tasks: persistent/continuous/should_stop_continuous_replication.yml
+    - import_tasks: persistent/continuous/should_use_alternative_replicator_database.yml
+      tags: ['should_use_alternative_replicator_database']
+    - import_tasks: persistent/continuous/should_fail_on_missing_source.yml
+      tags: ['should_fail_on_missing_source']
+
+  tags: [continuous]

@@ -1,0 +1,20 @@
+---
+- name: given source database exists
+  uri:
+    method: PUT
+    url: http://{{ couchdb_host }}:5984/test_once_db
+    user: "{{ admin_name }}"
+    password: "{{ admin_password }}"
+    force_basic_auth: yes
+    status_code: 201
+- name: given source database contains one document
+  uri:
+    method: PUT
+    url: http://{{ couchdb_host }}:5984/test_once_db/foo
+    user: "{{ admin_name }}"
+    password: "{{ admin_password }}"
+    force_basic_auth: yes
+    body_format: json
+    body:
+      foo: bar
+    status_code: 201

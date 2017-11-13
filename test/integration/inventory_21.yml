@@ -7,3 +7,5 @@ all:
       couchdb_node: nonode@nohost
       couchdb_config_endpoint: /_node/{{ couchdb_node }}/_config
       couchdb_version: 2
+      secondary_couchdb_host: couchdb
+      alternative_replicator_db: squanchy/_replicator

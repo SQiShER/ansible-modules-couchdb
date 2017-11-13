@@ -1,4 +1,18 @@
 ---
+- block:
+    - uri:
+        method: GET
+        url: http://couchdb2:5984/_cluster_setup?ensure_dbs_exist=["_users","_replicator"]
+      register: cluster_state
+  rescue:
+    - uri:
+        method: GET
+        url: http://couchdb2:5984/_cluster_setup?ensure_dbs_exist=["_users","_replicator"]
+        user: "{{ admin_name }}"
+        password: "{{ admin_password }}"
+        force_basic_auth: yes
+      register: cluster_state
+
 - name: perform cluster setup
   uri:
     method: POST
@@ -11,3 +25,4 @@
       singlenode: true
       ensure_dbs_exist: ["_users", "_replicator"]
     status_code: 201
+  when: cluster_state.json.state in ["single_node_disabled", "cluster_disabled"]

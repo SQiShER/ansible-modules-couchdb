@@ -1,0 +1,29 @@
+---
+- name: should replicate once from remote host
+  block:
+    - import_tasks: ../../__setup_source_database.yml
+    - name: when replication is triggered without create_target enabled
+      couchdb_replication:
+        host: "{{ couchdb_host }}"
+        user: "{{ admin_name }}"
+        password: "{{ admin_password }}"
+        source: http://{{ admin_name }}:{{ admin_password }}@localhost:5984/test_once_db
+        target: test_once_db2
+        continuous: no
+        persistent: no
+        state: present
+      register: result
+      ignore_errors: yes
+    - assert:
+        that:
+          - result.failed
+          - "'consider enabling target db creation' in result.msg"
+  always:
+    - name: cleanup source and target databases
+      uri:
+        method: DELETE
+        url: http://{{ couchdb_host }}:5984/test_once_db
+        user: "{{ admin_name }}"
+        password: "{{ admin_password }}"
+        force_basic_auth: yes
+      ignore_errors: yes

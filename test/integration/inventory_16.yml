@@ -6,3 +6,5 @@ all:
       couchdb_host: couchdb
       couchdb_config_endpoint: /_config
       couchdb_version: 1
+      secondary_couchdb_host: couchdb2
+      alternative_replicator_db: squanchy

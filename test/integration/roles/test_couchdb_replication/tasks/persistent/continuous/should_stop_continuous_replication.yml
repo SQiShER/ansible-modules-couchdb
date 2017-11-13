@@ -1,0 +1,50 @@
+---
+- name: should replicate once from remote host
+  block:
+    - import_tasks: ../../__setup_source_database.yml
+    - name: given replication is triggered
+      couchdb_replication:
+        host: "{{ couchdb_host }}"
+        user: "{{ admin_name }}"
+        password: "{{ admin_password }}"
+        source: http://{{ admin_name }}:{{ admin_password }}@localhost:5984/test_once_db
+        target: test_once_db2
+        create_target: yes
+        continuous: yes
+        persistent: yes
+        name: test_once_db_replication
+        state: present
+    - name: given replication has been sucessfully started
+      uri:
+        url: http://{{ couchdb_host }}:5984/test_once_db2/foo
+        user: "{{ admin_name }}"
+        password: "{{ admin_password }}"
+        force_basic_auth: yes
+      register: document_response
+      until: document_response.status == 200
+      retries: 10
+      delay: 1
+    - name: when replication gets removed
+      couchdb_replication:
+        host: "{{ couchdb_host }}"
+        user: "{{ admin_name }}"
+        password: "{{ admin_password }}"
+        name: test_once_db_replication
+        persistent: yes
+        state: absent
+    - name: then the replication document should be gone
+      uri:
+        url: http://{{ couchdb_host }}:5984/_replicator/test_once_db_replication
+        status_code: 404
+  always:
+    - name: cleanup source and target databases
+      uri:
+        method: DELETE
+        url: http://{{ couchdb_host }}:5984/{{item}}
+        user: "{{ admin_name }}"
+        password: "{{ admin_password }}"
+        force_basic_auth: yes
+      ignore_errors: yes
+      with_items:
+        - test_once_db
+        - test_once_db2

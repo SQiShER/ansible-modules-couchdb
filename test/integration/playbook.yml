@@ -19,3 +19,5 @@
       tags: [couchdb_config]
     - role: test_couchdb_database
       tags: [couchdb_database]
+    - role: test_couchdb_replication
+      tags: [couchdb_replication]
