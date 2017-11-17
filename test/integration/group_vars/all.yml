@@ -1,0 +1,14 @@
+---
+admin_name: draper
+admin_password: jameson
+admin_password_2: red_label
+admin_raw_password: "-pbkdf2-4a1bc30e4f3a7c03ad703ca0fdc60b37580a2542,3600790547b8af251f385410cd702f0e,10"
+user_name: lester
+user_password: nygaard
+user_password_2: fargo
+# user_raw is based on user_password_2
+user_raw_salt: 7aa3f5773278176f22d87a545877a35e
+user_raw_derived_key: 33dd85e33618b30a29bec5d9175eace4e4c92aaf
+user_raw_password_scheme: pbkdf2
+user_raw_iterations: 10
+user_raw_password: "-{{ user_raw_password_scheme }}-{{ user_raw_derived_key }},{{ user_raw_salt }},{{ user_raw_iterations }}"

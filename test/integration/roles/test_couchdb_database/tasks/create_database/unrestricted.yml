@@ -1,0 +1,29 @@
+---
+- block:
+    - name: when database gets created without permissions
+      couchdb_database:
+        host: "{{ couchdb_host }}"
+        login_user: "{{ admin_name }}"
+        login_password: "{{ admin_password }}"
+        name: test_db
+        state: present
+    - name: expect security document to be empty
+      uri:
+        url: http://{{ couchdb_host }}:5984/test_db/_security
+        user: "{{ admin_name }}"
+        password: "{{ admin_password }}"
+        force_basic_auth: yes
+        return_content: yes
+        headers:
+          accept: application/json
+      register: security_doc
+      failed_when:
+        - "security_doc.json != {}"
+  always:
+    - name: cleanup database
+      couchdb_database:
+        host: "{{ couchdb_host }}"
+        login_user: "{{ admin_name }}"
+        login_password: "{{ admin_password }}"
+        name: test_db
+        state: absent

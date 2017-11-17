@@ -1,0 +1,30 @@
+---
+- block:
+    - name: given unprotected database
+      couchdb_database:
+        host: "{{ couchdb_host }}"
+        login_user: "{{ admin_name }}"
+        login_password: "{{ admin_password }}"
+        name: test_db
+        state: present
+    - name: when admin user attempts to delete it
+      couchdb_database:
+        host: "{{ couchdb_host }}"
+        login_user: "{{ admin_name }}"
+        login_password: "{{ admin_password }}"
+        name: test_db
+        state: absent
+      register: database
+    - assert:
+        msg: then database deletion should have failed
+        that:
+          - database|changed
+          - database.database_deleted
+  always:
+    - name: remove database
+      couchdb_database:
+        host: "{{ couchdb_host }}"
+        login_user: "{{ admin_name }}"
+        login_password: "{{ admin_password }}"
+        name: test_db
+        state: absent

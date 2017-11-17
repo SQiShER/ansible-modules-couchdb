@@ -1,0 +1,36 @@
+---
+- block:
+
+    - import_tasks: __setup_users.yml
+      tags: [always]
+
+    - name: create database
+      block:
+        - import_tasks: create_database/unrestricted.yml
+          tags: [unrestricted]
+        - import_tasks: create_database/restricted_by_admin_names.yml
+          tags: [restricted_by_admin_names]
+        - import_tasks: create_database/restricted_by_admin_roles.yml
+          tags: [restricted_by_admin_roles]
+        - import_tasks: create_database/restricted_by_admin_names.yml
+          tags: [restricted_by_admin_names]
+        - import_tasks: create_database/restricted_by_member_names.yml
+          tags: [restricted_by_member_names]
+        - import_tasks: create_database/with_bad_authentication.yml
+          tags: [with_bad_authentication]
+      tags: [create_database]
+
+    - name: remove database
+      block:
+        - import_tasks: remove_database/remove_database_as_admin.yml
+          tags: [remove_database_as_admin]
+        - import_tasks: remove_database/remove_database_as_regular_user.yml
+          tags: [remove_database_as_regular_user]
+        - import_tasks: remove_database/remove_database_as_unknown_user.yml
+          tags: [remove_database_as_unknown_user]
+      tags: [remove_database]
+
+  always:
+
+    - import_tasks: __cleanup_users.yml
+      tags: [always]

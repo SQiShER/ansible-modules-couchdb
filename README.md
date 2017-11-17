@@ -18,7 +18,7 @@ The full documentation can be found [at the top of the module file](https://gith
   couchdb_user: name=heisenberg password=the-one-who-knocks admin=yes state=present
 ```
 
-You'll also find plenty more examples in the [integration test suite](https://github.com/SQiShER/ansible-modules-couchdb/tree/master/test/integration/roles/test_couchdb_user/tasks). 
+You'll also find plenty more examples in the [integration test suite](https://github.com/SQiShER/ansible-modules-couchdb/tree/master/test/integration/roles/test_couchdb_user/tasks).
 
 ## couchdb_config
 
@@ -39,7 +39,27 @@ More examples can be found in the [integration test suite](https://github.com/SQ
 
 ## couchdb_database
 
-Currently work in progress.
+This module lets you easily create and remove databases and manage their permissions.
+
+### Installation
+
+To use it, just copy the file [`lib/couchdb_database.py`](https://raw.githubusercontent.com/SQiShER/ansible-modules-couchdb/master/lib/couchdb_database.py) into one of your Ansible [library folders](http://docs.ansible.com/intro_configuration.html#library).
+
+### Example
+
+```yaml
+---
+- name: create database
+  couchdb_database: name=foo state=present
+---
+- name: create secured database
+  couchdb_database: name=foo member_names=["kevin"]
+---
+- name: delete database
+  couchdb_database: name=foo state=absent
+```
+
+More examples can be found in the [integration test suite](https://github.com/SQiShER/ansible-modules-couchdb/tree/master/test/integration/roles/test_couchdb_database/tasks).
 
 # Develop
 

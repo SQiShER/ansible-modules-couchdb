@@ -1,0 +1,25 @@
+---
+- block:
+    - name: when unknown user attempts to create database
+      couchdb_database:
+        host: "{{ couchdb_host }}"
+        login_user: unknown
+        login_password: wrongpassword
+        name: test_db
+        state: present
+      ignore_errors: yes
+      register: database
+    - name: then it should fail with proper error message
+      assert:
+        that:
+          - "database|failed"
+          - "database.msg == 'You are not a server admin.'"
+        msg: should fail with proper error message
+  always:
+    - name: cleanup database
+      couchdb_database:
+        host: "{{ couchdb_host }}"
+        login_user: "{{ admin_name }}"
+        login_password: "{{ admin_password }}"
+        name: test_db
+        state: absent

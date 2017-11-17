@@ -1,0 +1,18 @@
+---
+- name: remove admin
+  couchdb_user:
+    host: "{{ couchdb_host }}"
+    node: "{{ couchdb_node|default(omit) }}"
+    name: "{{ admin_name }}"
+    admin: yes
+    login_user: "{{ admin_name }}"
+    login_password: "{{ admin_password }}"
+    state: absent
+- name: remove user
+  couchdb_user:
+    host: "{{ couchdb_host }}"
+    node: "{{ couchdb_node|default(omit) }}"
+    name: "{{ user_name }}"
+    login_user: "{{ admin_name }}"
+    login_password: "{{ admin_password }}"
+    state: absent
