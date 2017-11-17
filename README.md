@@ -2,7 +2,7 @@
 
 # Modules
 
-This repository contains a collection of useful Ansible Modules to manage CouchDB servers. Currently there is only one, but more are coming.
+This repository contains a collection of useful Ansible Modules to manage CouchDB instances. All modules are compatible with CouchDB 1.6.x and >2.x.
 
 ## couchdb_user
 This module lets you easily manage admin and user accounts of a [CouchDB](http://couchdb.apache.org) database with [Ansible](http://www.ansible.com).
