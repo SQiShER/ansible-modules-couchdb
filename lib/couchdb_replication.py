@@ -1,12 +1,17 @@
 #!/usr/bin/env python
 
-# try:
-import pycouchdb
-#     HAS_REQUESTS = True
-# except ImportError:
-#     HAS_REQUESTS = False
+try:
+    import pycouchdb
+    HAS_PYCOUCHDB = True
+except ImportError:
+    HAS_PYCOUCHDB = False
 
-import requests
+try:
+    import requests
+    HAS_REQUESTS = True
+except ImportError:
+    HAS_REQUESTS = False
+
 import time
 import urllib
 
@@ -46,6 +51,12 @@ def run_module():
             ["user", "password"]
         ])
     result = dict(changed=False)
+
+    if not HAS_PYCOUCHDB:
+        module.fail_json(msg="Missing 'pycouchdb' package")
+
+    if not HAS_REQUESTS:
+        module.fail_json(msg="Missing 'requests' package")
 
     host = module.params['host']
     port = module.params['port']
